@@ -7,6 +7,11 @@ from app.services.competitions.search import TransfermarktCompetitionSearch
 
 router = APIRouter()
 
+@router.get("/")
+def get_all_competitions() -> dict:
+    tfmkt = TransfermarktCompetitionSearch()
+    competitions = tfmkt.get_all_competitions()
+    return competitions
 
 @router.get("/search/{competition_name}")
 def search_competitions(competition_name: str, page_number: Optional[int] = 1) -> dict:

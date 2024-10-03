@@ -5,7 +5,6 @@ from app.services.base import TransfermarktBase
 from app.utils.utils import extract_from_url
 from app.utils.xpath import Competitions
 
-
 @dataclass
 class TransfermarktCompetitionSearch(TransfermarktBase):
     """
@@ -81,5 +80,59 @@ class TransfermarktCompetitionSearch(TransfermarktBase):
         self.response["lastPageNumber"] = self.get_last_page_number(Competitions.Search.BASE)
         self.response["results"] = self.__parse_search_results()
         self.response["updatedAt"] = datetime.now()
+
+        return self.response
+
+
+    def __parse_all_competitions_results(self, page) -> dict:
+        """
+        Returns a dictionary of competitions.
+        """
+        competitions_dict = {}
+
+        tables = page.find_all("table", {"class": "items"})
+        items_table = tables[0]
+        content = items_table.select("tbody > tr")[1:]
+
+        tier = "First Tier"
+        for row in content:
+            columns = row.select("td")
+
+            if len(columns) == 1:
+                tier = columns[0].text.strip()
+            else:
+                id = columns[0].select("a")[1]["href"].split("/")[-1]
+                name = columns[0].text.strip()
+                country = columns[3].select("img")[0]["title"]
+                total_clubs = int(columns[4].text.strip())
+                total_players = int(columns[5].text.strip())
+                avg_age = float(columns[6].text.strip())
+                foreigners_percent = float(columns[7].text.strip().replace("%", ""))
+                total_value = columns[9].text.strip()
+                tier = tier
+                competition = {
+                    "id": id,
+                    "name": name,
+                    "country": country,
+                    "total_clubs": total_clubs,
+                    "total_players": total_players,
+                    "avg_age": avg_age,
+                    "foreigners_percent": foreigners_percent,
+                    "total_value": total_value,
+                    "tier": tier
+                }
+                competitions_dict[id] = competition
+
+        print("\n\n************************************************************\n\n")
+        print(competitions_dict)
+        return competitions_dict
+
+    def get_all_competitions(self) -> dict:
+        """
+        Returns all competitions.
+        """
+        self.URL = "https://www.transfermarkt.com/wettbewerbe/europa/wettbewerbe"
+        self.page = self.request_url_bsoup()
+        self.response = self.__parse_all_competitions_results(self.page)
 
         return self.response
