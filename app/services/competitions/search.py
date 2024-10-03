@@ -123,8 +123,6 @@ class TransfermarktCompetitionSearch(TransfermarktBase):
                 }
                 competitions_dict[id] = competition
 
-        print("\n\n************************************************************\n\n")
-        print(competitions_dict)
         return competitions_dict
 
     def get_all_competitions(self) -> dict:
